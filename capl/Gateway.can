@@ -1,0 +1,15 @@
+/*@!Encoding:1252*/
+includes
+{
+  #include "GT.cin"
+  #include "Common.cin"
+}
+
+variables
+{
+}
+
+on start
+{
+  GT_MASTER_START();
+}

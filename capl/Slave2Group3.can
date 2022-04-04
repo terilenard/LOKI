@@ -1,0 +1,116 @@
+/*@!Encoding:1252*/
+includes
+{
+  #include "GT.cin"
+  #include "Common.cin"
+}
+
+variables
+{
+  mstimer demoTimer, startTimer;
+  int64 currentLocalTime;
+  const long cDemoTimerCycle = 1000;
+
+  //SKMP Protocol constants
+  const int instanceKey = 302;
+  
+  byte masterKey[MASTER_KEY_LEN] = {0x3, 0x3, 0x3, 0x3, 0x3,
+                                   0x3, 0x3, 0x3, 0x3, 0x3, 
+                                   0x3, 0x3, 0x3, 0x3, 0x3,
+                                   0x3, 0x3, 0x3, 0x3, 0x3, 
+                                   0x3, 0x3, 0x3, 0x3, 0x3,
+                                   0x3, 0x3, 0x3, 0x3, 0x3, 
+                                   0x3, 0x3};
+  
+  byte seed[SEED_LEN] = {0x4, 0x4, 0x4, 0x4,
+                        0x4, 0x4, 0x4, 0x4, 
+                        0x4, 0x4, 0x4, 0x4, 
+                        0x4, 0x4, 0x4, 0x4};
+}
+
+on preStart 
+{
+  int retVal = 0;
+  
+  retVal = dll_InitInstance(instanceKey,
+                            masterKey,
+                            MASTER_KEY_LEN,
+                            seed,
+                            SEED_LEN,
+                            CID_3,
+                            GID_3);
+  
+  if (retVal == 0)
+  {
+    write("Slave instance: %d init successfull", instanceKey);  
+  }
+  else
+  {
+    // TODO: Should stop simulation?
+    write("preStart error. Return: %d Instance: %d", retVal, instanceKey);
+  }
+  
+  retVal = dll_SetupInstance(instanceKey);
+  
+  if (retVal == 0)
+  {
+    write("Slave instance: %d setup successfull", instanceKey);  
+  }
+  else
+  {
+    // TODO: Should stop simulation?
+    write("preStart error. Return: %d Instance: %d", retVal, instanceKey);
+  }  
+  
+}
+
+on start
+{
+  startTimer.set(300);
+}
+
+on timer startTimer
+{
+  //Start the demo timer
+  demoTimer.set(cDemoTimerCycle);
+  currentLocalTime = timeNowInt64();
+}
+
+on timer demoTimer
+{
+  int64 calcTime;
+  
+  calcTime = GT_SLAVE_TIME_TO_MASTER_TIME_NS(currentLocalTime + cDemoTimerCycle * 1e6); 
+  writeLineEx(-3, 0, "GT SLAVE \"%NODE_NAME%\" TIMER EVENT: Local slave time is %fs, calculated Master time is %fs, difference: %fs.",timenowint64()/1e9, calcTime / 1e9, (timenowint64() - calcTime) / 1e9);
+  
+  this.set(cDemoTimerCycle);
+  currentLocalTime = timeNowInt64();
+}
+
+on message MasterMACG3
+{
+  byte timestamp = 0;
+  byte macTrunc[MAC_TRUNC_LEN];
+  int retVal;
+  int index;
+  
+  for (index=0; index<MAC_TRUNC_LEN; index++)
+  {
+    macTrunc[index] = this.byte(index);
+  }
+  
+  retVal = dll_VerifyKey(instanceKey,
+                         macTrunc, 
+                         MAC_TRUNC_LEN, 
+                         timestamp);
+  
+  if (retVal == 0)
+  {
+    write("Slave instance: %d key update successfull", instanceKey);  
+  }
+  else
+  {
+    // TODO: Should stop simulation?
+    write("Key update error. Return: %d Instance: %d", retVal, instanceKey);
+  }  
+}

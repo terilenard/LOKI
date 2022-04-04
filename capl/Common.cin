@@ -1,0 +1,24 @@
+/*@!Encoding:1252*/
+variables
+{
+  //SKMP constants
+  const int MASTER_KEY_LEN = 32;
+  const int SEED_LEN = 16;
+  const int MAC_TRUNC_LEN = 8;
+  
+  byte GID_1 = 1;
+  byte GID_2 = 2;
+  byte GID_3 = 3;
+  
+  byte CID_1 = 50;
+  byte CID_2 = 51;
+  byte CID_3 = 52;
+  
+  //Global Time constants
+  const byte GT_MASTER = 1;
+  const byte GT_DOMAIN = 1;
+  const byte GT_SGW = 0;
+  const byte GT_CRC = 1;
+  const long GT_CAN_ID = 0x123;
+  const byte GT_VERBOSE = 1;
+}
